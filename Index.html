@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Paying It Down</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=DM+Mono:wght@400;500&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="wrap">
+  <div id="nav"></div>
+
+  <p class="eyebrow">Student loan payoff &middot; updated <span id="stamp"></span></p>
+  <h1 id="total">$0</h1>
+  <p class="sub">left across <b id="count">0</b> loans, from <b id="lo">0%</b> to <b id="hi">0%</b>
+     interest. Highest rate dies first, so every spare dollar lands where it costs the most.</p>
+
+  <div class="prog">
+    <div class="prog-track"><div class="prog-fill" id="progFill"></div></div>
+    <p class="prog-cap" id="progCap"></p>
+  </div>
+
+  <div class="next">
+    <span class="panel-label">Currently under attack</span>
+    <div class="next-name" id="nextName">&mdash;</div>
+    <p class="next-line" id="nextLine"></p>
+  </div>
+
+  <div class="stats bare">
+    <div><div class="stat-k">Debt&#8209;free</div><div class="stat-v" id="sFree">&mdash;</div><div class="stat-d" id="dFree"></div></div>
+    <div><div class="stat-k">Every month</div><div class="stat-v" id="sMonth">&mdash;</div><div class="stat-d" id="dMonth"></div></div>
+    <div><div class="stat-k">Interest left to pay</div><div class="stat-v" id="sInt">&mdash;</div><div class="stat-d" id="dInt"></div></div>
+  </div>
+
+  <section class="sec">
+    <h2>Two ways to look at it</h2>
+    <p class="sec-note">The plan is fixed, but the pace isn't. These pages show the same loans from
+       different angles.</p>
+    <div class="doors">
+      <a class="door" href="calculator.html">
+        <div class="door-k">Drag a slider</div>
+        <h3>What if</h3>
+        <p>Push the monthly payment up or down and watch the payoff date and the interest move with it.</p>
+      </a>
+      <a class="door" href="schedule.html">
+        <div class="door-k">Every payment</div>
+        <h3>Month by month</h3>
+        <p>The full spreadsheet &mdash; which loan gets what, in which month, until every balance is zero.</p>
+      </a>
+    </div>
+  </section>
+
+  <div id="give"></div>
+
+  <footer>
+    Interest accrues monthly at each loan's stated rate. Real servicers compound daily and set
+    their own minimum per loan, so read this as a planning estimate &mdash; not a payoff quote.
+  </footer>
+</div>
+
+<script src="data.js"></script>
+<script src="engine.js"></script>
+<script>
+(function(){
+  var cfg = window.LOAN_DATA, P = window.Payoff;
+  var r = P.simulate(cfg, cfg.focusMonthly, cfg.spreadMonthly);
+
+  document.getElementById('nav').innerHTML = P.nav('home');
+  document.getElementById('give').innerHTML = P.giveSection(cfg);
+
+  var aprs = r.loans.map(function(l){ return l.apr; });
+  document.getElementById('total').textContent = P.money2(r.owed);
+  document.getElementById('count').textContent = r.loans.length;
+  document.getElementById('lo').textContent = Math.min.apply(null, aprs).toFixed(2) + '%';
+  document.getElementById('hi').textContent = Math.max.apply(null, aprs).toFixed(2) + '%';
+  document.getElementById('stamp').textContent =
+    new Date().toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'});
+
+  /* progress */
+  var began = Math.max(cfg.startingBalance, r.owed);
+  var cleared = began - r.owed;
+  var pct = began > 0 ? cleared / began * 100 : 0;
+  document.getElementById('progFill').style.width = pct.toFixed(1) + '%';
+  document.getElementById('progCap').textContent = cleared > 0
+    ? P.money2(cleared) + ' gone \u2014 ' + pct.toFixed(1) + '% of ' + P.money2(began)
+    : 'Starting line: ' + P.money2(began);
+
+  /* the loan taking the focused payment in month 1, and what falls next */
+  var top = r.rows[0];
+  document.getElementById('nextName').textContent = top.name + ' \u2014 ' + top.apr.toFixed(2) + '%';
+  document.getElementById('nextLine').innerHTML =
+    P.money2(top.balance) + ' on the books, the highest rate of the fifteen.<br>' +
+    'Clears <b>' + P.monthLabel(cfg, top.done) + '</b>, then its payment rolls into <b>' +
+    (r.rows[1] ? r.rows[1].name : 'the next one') + '</b>.';
+
+  /* stats */
+  var y = Math.floor(r.months / 12), mo = r.months % 12;
+  document.getElementById('sFree').textContent = r.ok ? P.monthLabel(cfg, r.months) : 'a very long time';
+  document.getElementById('dFree').textContent = (y ? (mo ? y + 'y ' + mo + 'm' : y + 'y') : mo + 'm') + ' from the first payment';
+
+  document.getElementById('sMonth').textContent = P.money(cfg.focusMonthly + cfg.spreadMonthly);
+  document.getElementById('dMonth').textContent =
+    P.money(cfg.focusMonthly) + ' focused + ' + P.money(cfg.spreadMonthly) + ' split';
+
+  document.getElementById('sInt').textContent = P.money2(r.interest);
+  document.getElementById('dInt').textContent = P.money2(r.outflow) + ' paid in total';
+})();
+</script>
+</body>
+</html>
