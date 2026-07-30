@@ -76,7 +76,7 @@
   document.getElementById('stamp').textContent =
     new Date().toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'});
  
-  /* progress */
+
   var began = Math.max(cfg.startingBalance, r.owed);
   var cleared = began - r.owed;
   var pct = began > 0 ? cleared / began * 100 : 0;
