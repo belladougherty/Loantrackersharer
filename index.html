@@ -89,7 +89,7 @@ lol debt.
 
   /* the loan taking the focused payment in month 1, and what falls next */
   var top = r.rows[0];
-  document.getElementById('nextName').textContent = top.name + ' \u2014 ' + top.apr.toFixed(2) + '%';
+  document.getElementById('nextName').textContent = top.name + ' at ' + top.apr.toFixed(2) + '%';
   document.getElementById('nextLine').innerHTML =
     P.money2(top.balance) + ' on the books, the highest rate of the fifteen.<br>' +
     'Clears <b>' + P.monthLabel(cfg, top.done) + '</b>, then its payment rolls into <b>' +
