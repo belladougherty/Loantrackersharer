@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>What if &middot; Paying It Down</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=DM+Mono:wght@400;500&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="wrap">
+  <div id="nav"></div>
+
+  <p class="eyebrow">What if</p>
+  <h1 class="small">Move the money,<br>move the date.</h1>
+  <p class="sub">Everything below recalculates as you drag. The even split across the federal loans
+     stays put &mdash; you're only changing what goes at the top loan.</p>
+
+  <div class="panel">
+    <span class="panel-label">Extra at the top loan each month</span>
+    <div class="amount"><span id="focus">$0</span><span class="per"> / month</span></div>
+    <input type="range" id="slider" min="300" max="2500" step="25" value="1000"
+           aria-label="Extra put toward the highest-rate loan each month">
+    <div class="ticks"><span>$300</span><span>$2,500</span></div>
+
+    <div class="tally">
+      <span id="tFocus"></span><br>
+      <span id="tSpread"></span>
+      <span class="rule"></span>
+      <b id="tTotal"></b>
+    </div>
+
+    <div class="stats" aria-live="polite">
+      <div><div class="stat-k">Debt&#8209;free</div><div class="stat-v" id="sFree">&mdash;</div><div class="stat-d" id="dFree"></div></div>
+      <div><div class="stat-k">Time to go</div><div class="stat-v" id="sTime">&mdash;</div><div class="stat-d" id="dTime"></div></div>
+      <div><div class="stat-k">Interest paid</div><div class="stat-v" id="sInt">&mdash;</div><div class="stat-d" id="dInt"></div></div>
+    </div>
+  </div>
+
+  <section class="sec">
+    <h2>The order they fall</h2>
+    <p class="sec-note">One bar per loan, in the order they get cleared. When a loan hits zero its
+       whole payment rolls into the next one down &mdash; which is why the bars get shorter as you
+       move the slider up.</p>
+    <div class="legend">
+      <span><i class="chip pale"></i> even payment only</span>
+      <span><i class="chip solid"></i> taking the extra</span>
+    </div>
+    <div class="ladder" id="ladder"></div>
+    <div class="axis"><span></span><span></span>
+      <div class="axis-line"><span id="axStart"></span><span id="axEnd"></span></div>
+      <span></span>
+    </div>
+  </section>
+
+  <div id="give"></div>
+
+  <footer>
+    Interest accrues monthly at each loan's stated rate. Real servicers compound daily and set
+    their own minimum per loan, so read this as a planning estimate &mdash; not a payoff quote.
+  </footer>
+</div>
+
+<script src="data.js"></script>
+<script src="engine.js"></script>
+<script>
+(function(){
+  var cfg = window.LOAN_DATA, P = window.Payoff;
+  var SPREAD = cfg.spreadMonthly || 0;
+
+  document.getElementById('nav').innerHTML = P.nav('calculator');
+  document.getElementById('give').innerHTML = P.giveSection(cfg);
+
+  var ordered = P.order(cfg.loans);
+  var ladder = document.getElementById('ladder');
+  ordered.forEach(function(l){
+    var row = document.createElement('div');
+    row.className = 'rung';
+    row.innerHTML =
+      '<span class="rung-name">' + l.name + '</span>' +
+      '<span class="rung-apr">' + l.apr.toFixed(2) + '%</span>' +
+      '<span class="rung-track"><span class="rung-bar"></span><span class="rung-focus"></span></span>' +
+      '<span class="rung-when"></span>';
+    ladder.appendChild(row);
+  });
+  var pales = ladder.querySelectorAll('.rung-bar');
+  var hots  = ladder.querySelectorAll('.rung-focus');
+  var whens = ladder.querySelectorAll('.rung-when');
+
+  var base = P.simulate(cfg, cfg.focusMonthly, SPREAD);
+  var slider = document.getElementById('slider');
+  slider.value = cfg.focusMonthly;
+
+  function draw(){
+    var f = +slider.value;
+    var r = P.simulate(cfg, f, SPREAD);
+
+    document.getElementById('focus').textContent = P.money(f);
+    document.getElementById('tFocus').textContent = P.money(f) + ' at the top loan';
+    document.getElementById('tSpread').textContent = SPREAD
+      ? P.money(SPREAD) + ' split evenly across the federal loans, from ' + P.monthLabel(cfg, r.splitAt)
+      : 'no even split configured';
+    document.getElementById('tTotal').textContent = P.money(f + SPREAD) + ' out the door each month';
+
+    document.getElementById('sFree').textContent = r.ok ? P.monthLabel(cfg, r.months) : 'a very long time';
+    var y = Math.floor(r.months / 12), mo = r.months % 12;
+    document.getElementById('sTime').textContent = y ? (mo ? y + 'y ' + mo + 'm' : y + 'y') : mo + 'm';
+    document.getElementById('dTime').textContent = r.months + ' payments';
+    document.getElementById('sInt').textContent = P.money2(r.interest);
+
+    var dm = base.months - r.months, di = base.interest - r.interest;
+    var eF = document.getElementById('dFree'), eI = document.getElementById('dInt');
+    if (f === cfg.focusMonthly){
+      eF.textContent = 'the current plan'; eF.className = 'stat-d down';
+      eI.textContent = 'the current plan'; eI.className = 'stat-d down';
+    } else {
+      eF.textContent = dm > 0 ? dm + ' months sooner' : dm < 0 ? (-dm) + ' months later' : 'same finish';
+      eF.className = 'stat-d ' + (dm > 0 ? 'up' : 'down');
+      eI.textContent = di > 0 ? P.money2(di) + ' saved' : di < 0 ? P.money2(-di) + ' more' : 'no change';
+      eI.className = 'stat-d ' + (di > 0 ? 'up' : 'down');
+    }
+
+    var span = Math.max(r.months, 1);
+    r.rows.forEach(function(row, i){
+      var b = row.began || 1, e = row.done || r.months, h = row.hot;
+      pales[i].style.left  = ((b - 1) / span * 100) + '%';
+      pales[i].style.width = Math.max((e - b + 1) / span * 100, 1.4) + '%';
+      if (h){
+        hots[i].style.display = '';
+        hots[i].style.left  = ((h - 1) / span * 100) + '%';
+        hots[i].style.width = Math.max((e - h + 1) / span * 100, 1.4) + '%';
+      } else {
+        hots[i].style.display = 'none';
+      }
+      whens[i].textContent = row.done ? P.monthLabel(cfg, row.done) : '';
+    });
+    document.getElementById('axStart').textContent = P.monthLabel(cfg, 1);
+    document.getElementById('axEnd').textContent = r.ok ? P.monthLabel(cfg, r.months) : '';
+  }
+
+  slider.addEventListener('input', draw);
+  draw();
+})();
+</script>
+</body>
+</html>
