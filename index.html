@@ -85,15 +85,13 @@
     ? P.money2(cleared) + ' gone, ' + pct.toFixed(1) + '% of ' + P.money2(began)
     : 'Starting line: ' + P.money2(began);
  
-  /* the loan taking the focused payment in month 1, and what falls next */
   var top = r.rows[0];
   document.getElementById('nextName').textContent = top.name + ' at ' + top.apr.toFixed(2) + '%';
   document.getElementById('nextLine').innerHTML =
     P.money2(top.balance) + ' left in this loan, the highest rate of the ' + r.rows.length + ' remaining.<br>' +
     'Clears <b>' + P.monthLabel(cfg, top.done) + '</b>, then its payment rolls into <b>' +
     (r.rows[1] ? r.rows[1].name : 'the next one') + '</b>.';
- 
-  /* stats */
+
   var y = Math.floor(r.months / 12), mo = r.months % 12;
   document.getElementById('sFree').textContent = r.ok ? P.monthLabel(cfg, r.months) : 'a very long time';
   document.getElementById('dFree').textContent = (y ? (mo ? y + 'y ' + mo + 'm' : y + 'y') : mo + 'm') + ' from the first payment';
