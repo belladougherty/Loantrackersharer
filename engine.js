@@ -1,6 +1,4 @@
-/* ============================================================
-   Payoff engine. Shared by every page. No need to edit this.
-   ============================================================ */
+
 
 (function (root) {
   'use strict';
@@ -13,7 +11,6 @@
     return { y: +p[0], m: +p[1] - 1 };
   }
 
-  /* i = 1 means the first payment month */
   function monthLabel(cfg, i) {
     var a = anchor(cfg), t = a.m + i - 1;
     return MONTHS[((t % 12) + 12) % 12] + ' ' + (a.y + Math.floor(t / 12));
@@ -24,13 +21,12 @@
     return MONTHS[((t % 12) + 12) % 12] + " '" + String(a.y + Math.floor(t / 12)).slice(2);
   }
 
-  /* "2027-01" -> the payment-month number it falls on */
   function monthIndex(cfg, ym) {
     var a = anchor(cfg), p = ym.split('-');
     return (+p[0] - a.y) * 12 + (+p[1] - 1 - a.m) + 1;
   }
 
-  /* Highest rate first. Stable, so equal rates keep their listed order. */
+
   function order(loans) {
     return loans.filter(function (l) { return l.balance > 0; })
                 .slice()
@@ -45,19 +41,7 @@
       { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   }
 
-  /*
-    simulate(cfg, focusAmt, spreadAmt)
-
-    Each month, in this order:
-      1. every open loan accrues one month of interest
-      2. if the even split has started, each open FEDERAL loan gets an equal
-         slice of spreadAmt; any slice bigger than the remaining balance spills
-         forward instead of being wasted
-      3. whatever is left, plus focusAmt, goes at the highest-rate open loan,
-         cascading down as each one clears
-
-    Before the split starts, focusAmt + spreadAmt all goes to step 3.
-  */
+  
   function simulate(cfg, focusAmt, spreadAmt) {
     var loans = order(cfg.loans);
     var n = loans.length;
@@ -77,7 +61,7 @@
       var cells = [];
       for (i = 0; i < n; i++) cells.push({ pay: 0, interest: 0, endBal: 0, focused: false, cleared: false });
 
-      /* 1. interest */
+   
       for (i = 0; i < n; i++) {
         if (bal[i] > 0) {
           var acc = bal[i] * rate[i];
@@ -86,7 +70,6 @@
         }
       }
 
-      /* 2. the even split */
       var pot;
       if (m < splitAt) {
         pot = focusAmt + spreadAmt;
@@ -113,7 +96,6 @@
         }
       }
 
-      /* 3. the focused payment, cascading */
       for (j = 0; j < n && pot > CENT; j++) {
         if (bal[j] <= 0) continue;
         if (!began[j]) began[j] = m;
@@ -162,7 +144,6 @@
     };
   }
 
-  /* Shared chrome: nav bar + progress header, so the pages stay in sync */
   function nav(current) {
     var items = [
       { id: 'home',       href: 'index.html',      text: 'Home' },
