@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Month by month &middot; Paying It Down</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=DM+Mono:wght@400;500&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="wrap wide">
+  <div id="nav"></div>
+
+  <p class="eyebrow">Month by month</p>
+  <h1 class="small">Every payment,<br>until it's gone.</h1>
+  <p class="sub" id="intro"></p>
+
+  <div class="stats bare">
+    <div><div class="stat-k">Out the door</div><div class="stat-v" id="sMonth">&mdash;</div><div class="stat-d" id="dMonth"></div></div>
+    <div><div class="stat-k">Last payment</div><div class="stat-v" id="sLast">&mdash;</div><div class="stat-d" id="dLast"></div></div>
+    <div><div class="stat-k">Paid in total</div><div class="stat-v" id="sOut">&mdash;</div><div class="stat-d" id="dOut"></div></div>
+  </div>
+
+  <section class="sec">
+    <div class="tools">
+      <div class="seg" role="group" aria-label="What to show in each cell">
+        <button type="button" data-view="pay"      aria-pressed="true">Payment</button>
+        <button type="button" data-view="interest" aria-pressed="false">Interest</button>
+        <button type="button" data-view="balance"  aria-pressed="false">Balance left</button>
+      </div>
+      <button type="button" class="mini" id="csv">Download CSV</button>
+    </div>
+
+    <div class="legend">
+      <span><i class="chip pale"></i> even split only</span>
+      <span><i class="chip solid"></i> taking the extra</span>
+      <span>underlined cell = loan hits zero</span>
+    </div>
+
+    <div class="sheet-scroll">
+      <table class="sheet" id="sheet"></table>
+    </div>
+    <p class="sheet-hint" id="hint"></p>
+  </section>
+
+  <div id="give"></div>
+
+  <footer>
+    Interest accrues monthly at each loan's stated rate, charged before that month's payment is
+    applied. Real servicers compound daily and set their own minimum per loan, so read this as a
+    planning estimate &mdash; not a payoff quote.
+  </footer>
+</div>
+
+<script src="data.js"></script>
+<script src="engine.js"></script>
+<script>
+(function(){
+  var cfg = window.LOAN_DATA, P = window.Payoff;
+  var SPREAD = cfg.spreadMonthly || 0;
+  var FOCUS  = cfg.focusMonthly;
+  var r = P.simulate(cfg, FOCUS, SPREAD);
+  var view = 'pay';
+
+  document.getElementById('nav').innerHTML = P.nav('schedule');
+  document.getElementById('give').innerHTML = P.giveSection(cfg);
+
+  document.getElementById('intro').innerHTML =
+    'The real plan, interest included: <b>' + P.money(FOCUS + SPREAD) + ' a month</b>, of which <b>' +
+    P.money(FOCUS) + '</b> goes at whichever loan carries the highest rate and <b>' + P.money(SPREAD) +
+    '</b> is divided evenly across the federal loans still open, starting ' +
+    P.monthLabel(cfg, r.splitAt) + '.';
+
+  document.getElementById('sMonth').textContent = P.money(FOCUS + SPREAD);
+  document.getElementById('dMonth').textContent = P.money(FOCUS) + ' focused + ' + P.money(SPREAD) + ' split';
+  document.getElementById('sLast').textContent = P.monthLabel(cfg, r.months);
+  document.getElementById('dLast').textContent = r.months + ' payments';
+  document.getElementById('sOut').textContent = P.money2(r.outflow);
+  document.getElementById('dOut').textContent = P.money2(r.interest) + ' of it interest';
+
+  document.getElementById('hint').textContent =
+    'Scroll sideways for later months. Loan names and the monthly total stay pinned.';
+
+  function cell(c){
+    if (view === 'balance') return c.endBal > 0 ? c.endBal.toFixed(2) : '0';
+    if (view === 'interest') return c.interest > 0.004 ? c.interest.toFixed(2) : '\u2014';
+    return c.pay > 0.004 ? c.pay.toFixed(2) : '\u2014';
+  }
+
+  function build(){
+    var m = r.perMonth, rows = r.rows, h = [], i, j;
+
+    h.push('<thead><tr><th class="corner">Loan</th>');
+    for (j = 0; j < m.length; j++) h.push('<th>' + m[j].short + '</th>');
+    h.push('<th class="tot">Total paid</th></tr></thead>');
+
+    h.push('<tbody>');
+    for (i = 0; i < rows.length; i++){
+      h.push('<tr><th><span class="nm">' + rows[i].name + '</span><span class="rt">' +
+             rows[i].apr.toFixed(2) + '%</span></th>');
+      for (j = 0; j < m.length; j++){
+        var c = m[j].cells[i], cls = [];
+        if (view === 'pay'){
+          if (c.focused) cls.push('focus');
+          else if (c.pay > 0.004) cls.push('has');
+        } else if (c.pay > 0.004 || c.interest > 0.004) cls.push('has');
+        if (c.cleared) cls.push('clear');
+        h.push('<td' + (cls.length ? ' class="' + cls.join(' ') + '"' : '') + '>' + cell(c) + '</td>');
+      }
+      h.push('<td class="tot">' + rows[i].paid.toFixed(2) + '</td></tr>');
+    }
+    h.push('</tbody>');
+
+    h.push('<tfoot><tr><th>' + (view === 'balance' ? 'Still owed' : view === 'interest' ? 'Interest' : 'Monthly total') + '</th>');
+    for (j = 0; j < m.length; j++){
+      var t = 0;
+      for (i = 0; i < rows.length; i++){
+        var cc = m[j].cells[i];
+        t += view === 'balance' ? cc.endBal : view === 'interest' ? cc.interest : cc.pay;
+      }
+      h.push('<td>' + (t > 0.004 ? t.toFixed(2) : '0') + '</td>');
+    }
+    var grand = view === 'balance' ? 0 : view === 'interest' ? r.interest : r.outflow;
+    h.push('<td class="tot">' + grand.toFixed(2) + '</td></tr></tfoot>');
+
+    document.getElementById('sheet').innerHTML = h.join('');
+  }
+
+  var segs = document.querySelectorAll('.seg button');
+  Array.prototype.forEach.call(segs, function(btn){
+    btn.addEventListener('click', function(){
+      view = btn.getAttribute('data-view');
+      Array.prototype.forEach.call(segs, function(b){
+        b.setAttribute('aria-pressed', String(b === btn));
+      });
+      build();
+    });
+  });
+
+  document.getElementById('csv').addEventListener('click', function(){
+    var m = r.perMonth, rows = r.rows, lines = [], i, j;
+    var head = ['Loan','APR'];
+    for (j = 0; j < m.length; j++) head.push(m[j].label);
+    head.push('Total paid','Interest');
+    lines.push(head.join(','));
+    for (i = 0; i < rows.length; i++){
+      var line = [rows[i].name, rows[i].apr.toFixed(2)];
+      for (j = 0; j < m.length; j++) line.push(m[j].cells[i].pay.toFixed(2));
+      line.push(rows[i].paid.toFixed(2), rows[i].interest.toFixed(2));
+      lines.push(line.join(','));
+    }
+    var tot = ['Monthly total',''];
+    for (j = 0; j < m.length; j++) tot.push(m[j].total.toFixed(2));
+    tot.push(r.outflow.toFixed(2), r.interest.toFixed(2));
+    lines.push(tot.join(','));
+
+    var blob = new Blob([lines.join('\n')], { type:'text/csv;charset=utf-8' });
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'loan-schedule.csv';
+    document.body.appendChild(a); a.click();
+    document.body.removeChild(a);
+    setTimeout(function(){ URL.revokeObjectURL(a.href); }, 1000);
+  });
+
+  build();
+})();
+</script>
+</body>
+</html>
