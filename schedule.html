@@ -153,6 +153,7 @@
     var a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
     document.body.appendChild(a); a.click();
+    a.download = 'loan-schedule.csv';
     document.body.removeChild(a);
     setTimeout(function(){ URL.revokeObjectURL(a.href); }, 1000);
   });
