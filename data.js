@@ -1,20 +1,4 @@
-/* ============================================================
-   THIS IS THE ONLY FILE YOU EVER NEED TO EDIT.
- 
-   All three pages read from here, so changing a balance once
-   updates the home page, the calculator, and the schedule.
- 
-     startingBalance - what you owed on day one (drives the progress bar)
-     focusMonthly    - extra thrown at the highest-rate loan
-     spreadMonthly   - divided evenly across federal loans still open
-     spreadStarts    - the month those even payments begin
-     giveLink        - a Ko-fi / Venmo / PayPal URL, or "" to hide that section
-     fed             - true for Direct Loans, false for private (Sallie Mae)
- 
-   Loans are attacked highest-rate-first. Loans sharing a rate are
-   taken in the order you list them, so keep unsubsidized above
-   subsidized if you want those paid first.
-   ============================================================ */
+
  
 window.LOAN_DATA = {
  
