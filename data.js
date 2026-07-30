@@ -31,8 +31,8 @@ window.LOAN_DATA = {
   contributors: [],
 
   loans: [
-    { name: "SM #6632", balance: 1687.58, apr: 13.00, fed: false },
-    { name: "SM #0425", balance: 1109.51, apr:  8.75, fed: false },
+    { name: "Sallie Mae #6632", balance: 1687.58, apr: 13.00, fed: false },
+    { name: "Sallie Mae #0425", balance: 1109.51, apr:  8.75, fed: false },
     { name: "1-08",     balance: 1109.51, apr:  6.53, fed: true  },
     { name: "1-07",     balance: 2250.00, apr:  6.53, fed: true  },
     { name: "1-09",     balance: 2250.00, apr:  6.53, fed: true  },
