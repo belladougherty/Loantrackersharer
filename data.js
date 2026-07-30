@@ -1,38 +1,36 @@
 /* ============================================================
    THIS IS THE ONLY FILE YOU EVER NEED TO EDIT.
-
+ 
    All three pages read from here, so changing a balance once
    updates the home page, the calculator, and the schedule.
-
+ 
      startingBalance - what you owed on day one (drives the progress bar)
      focusMonthly    - extra thrown at the highest-rate loan
      spreadMonthly   - divided evenly across federal loans still open
      spreadStarts    - the month those even payments begin
      giveLink        - a Ko-fi / Venmo / PayPal URL, or "" to hide that section
      fed             - true for Direct Loans, false for private (Sallie Mae)
-
+ 
    Loans are attacked highest-rate-first. Loans sharing a rate are
    taken in the order you list them, so keep unsubsidized above
    subsidized if you want those paid first.
    ============================================================ */
-
+ 
 window.LOAN_DATA = {
-
-  startingBalance: 28795.43,
-
+ 
+  startingBalance: 25998.34,
+ 
   focusMonthly:  1000,
   spreadMonthly:  300,
   spreadStarts:  "2027-01",
-
+ 
   firstPaymentMonth: "2026-08",
-
+ 
   giveLink:  "",
   giveLabel: "Chip in",
   contributors: [],
-
+ 
   loans: [
-    { name: "Sallie Mae #6632", balance: 1687.58, apr: 13.00, fed: false },
-    { name: "Sallie Mae #0425", balance: 1109.51, apr:  8.75, fed: false },
     { name: "1-08",     balance: 1109.51, apr:  6.53, fed: true  },
     { name: "1-07",     balance: 2250.00, apr:  6.53, fed: true  },
     { name: "1-09",     balance: 2250.00, apr:  6.53, fed: true  },
@@ -48,3 +46,4 @@ window.LOAN_DATA = {
     { name: "1-02",     balance: 3148.11, apr:  4.99, fed: true  }
   ]
 };
+ 
