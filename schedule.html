@@ -62,7 +62,7 @@
   document.getElementById('give').innerHTML = P.giveSection(cfg);
 
   document.getElementById('intro').innerHTML =
-    'The real plan, interest included: <b>' + P.money(FOCUS + SPREAD) + ' a month</b>, of which <b>' +
+    'Interest included: <b>' + P.money(FOCUS + SPREAD) + ' a month</b>, of which <b>' +
     P.money(FOCUS) + '</b> goes at whichever loan carries the highest rate and <b>' + P.money(SPREAD) +
     '</b> is divided evenly across the federal loans still open, starting ' +
     P.monthLabel(cfg, r.splitAt) + '.';
