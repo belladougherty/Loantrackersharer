@@ -4,7 +4,7 @@ window.LOAN_DATA = {
  
   startingBalance: 25998.34,
  
-  focusMonthly:  1000,
+  focusMonthly:  1100,
   spreadMonthly:  300,
   spreadStarts:  "2027-01",
  
